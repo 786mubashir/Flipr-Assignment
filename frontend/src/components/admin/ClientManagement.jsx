@@ -136,7 +136,7 @@ function ClientManagement({ clients, onClientCreated, onClientDeleted }) {
               <div key={client._id} className="item-card">
                 <div className="item-image">
                   <img
-                    src={client.image.startsWith('http') ? client.image : `http://localhost:5000${client.image}`}
+                    src={client.image || 'https://via.placeholder.com/450x350?text=No+Image'}
                     alt={client.name}
                     onError={(e) => {
                       e.target.src = 'https://via.placeholder.com/450x350?text=No+Image'

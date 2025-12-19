@@ -122,7 +122,7 @@ function ProjectManagement({ projects, onProjectCreated, onProjectDeleted }) {
               <div key={project._id} className="item-card">
                 <div className="item-image">
                   <img
-                    src={project.image.startsWith('http') ? project.image : `http://localhost:5000${project.image}`}
+                    src={project.image || 'https://via.placeholder.com/450x350?text=No+Image'}
                     alt={project.name}
                     onError={(e) => {
                       e.target.src = 'https://via.placeholder.com/450x350?text=No+Image'
