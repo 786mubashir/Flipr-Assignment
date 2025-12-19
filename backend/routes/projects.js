@@ -2,9 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Project = require('../models/Project');
 const upload = require('../middleware/upload');
-const { cropImage } = require('../utils/imageCropper');
-const path = require('path');
-const fs = require('fs');
+const { cropImageToBuffer } = require('../utils/imageCropper');
+const { uploadToCloudinary, deleteFromCloudinary, extractPublicIdFromUrl } = require('../utils/cloudinary');
 
 // Get all projects
 router.get('/', async (req, res) => {
@@ -36,26 +35,30 @@ router.post('/', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'Image is required' });
     }
 
-    const originalPath = req.file.path;
-    const croppedFilename = 'cropped-' + req.file.filename;
-    const croppedPath = path.join(path.dirname(originalPath), croppedFilename);
+    // Crop image to 450x350 buffer
+    const croppedBuffer = await cropImageToBuffer(req.file.path);
 
-    // Crop image to 450x350
-    await cropImage(originalPath, croppedPath);
+    // Upload to Cloudinary
+    const uploadResult = await uploadToCloudinary(croppedBuffer, 'portfolio/projects');
 
-    // Delete original image
-    fs.unlinkSync(originalPath);
+    // Delete temporary file
+    const fs = require('fs');
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
 
     const project = new Project({
       name: req.body.name,
       description: req.body.description,
-      image: `/uploads/${croppedFilename}`
+      image: uploadResult.secure_url
     });
 
     await project.save();
     res.status(201).json(project);
   } catch (error) {
+    console.error('Error creating project:', error);
     // Clean up uploaded file on error
+    const fs = require('fs');
     if (req.file && fs.existsSync(req.file.path)) {
       try {
         fs.unlinkSync(req.file.path);
@@ -76,19 +79,32 @@ router.put('/:id', upload.single('image'), async (req, res) => {
     }
 
     if (req.file) {
-      // Delete old image
-      const oldImagePath = path.join(__dirname, '..', project.image);
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+      // Delete old image from Cloudinary if it exists
+      if (project.image && project.image.includes('cloudinary.com')) {
+        try {
+          const publicId = extractPublicIdFromUrl(project.image);
+          if (publicId) {
+            await deleteFromCloudinary(publicId);
+          }
+        } catch (deleteError) {
+          console.error('Error deleting old image from Cloudinary:', deleteError);
+          // Continue even if deletion fails
+        }
       }
 
-      // Crop new image
-      const originalPath = req.file.path;
-      const croppedFilename = 'cropped-' + req.file.filename;
-      const croppedPath = path.join(path.dirname(originalPath), croppedFilename);
-      await cropImage(originalPath, croppedPath);
-      fs.unlinkSync(originalPath);
-      project.image = `/uploads/${croppedFilename}`;
+      // Crop new image to 450x350 buffer
+      const croppedBuffer = await cropImageToBuffer(req.file.path);
+
+      // Upload to Cloudinary
+      const uploadResult = await uploadToCloudinary(croppedBuffer, 'portfolio/projects');
+
+      // Delete temporary file
+      const fs = require('fs');
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+
+      project.image = uploadResult.secure_url;
     }
 
     if (req.body.name) project.name = req.body.name;
@@ -97,6 +113,7 @@ router.put('/:id', upload.single('image'), async (req, res) => {
     await project.save();
     res.json(project);
   } catch (error) {
+    console.error('Error updating project:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -109,15 +126,23 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    // Delete image file
-    const imagePath = path.join(__dirname, '..', project.image);
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
+    // Delete image from Cloudinary if it exists
+    if (project.image && project.image.includes('cloudinary.com')) {
+      try {
+        const publicId = extractPublicIdFromUrl(project.image);
+        if (publicId) {
+          await deleteFromCloudinary(publicId);
+        }
+      } catch (deleteError) {
+        console.error('Error deleting image from Cloudinary:', deleteError);
+        // Continue even if deletion fails
+      }
     }
 
     await Project.findByIdAndDelete(req.params.id);
     res.json({ message: 'Project deleted successfully' });
   } catch (error) {
+    console.error('Error deleting project:', error);
     res.status(500).json({ error: error.message });
   }
 });

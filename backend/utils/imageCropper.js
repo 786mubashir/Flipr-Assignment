@@ -1,16 +1,14 @@
 const sharp = require('sharp');
-const path = require('path');
-const fs = require('fs');
 
 /**
- * Crop image to specific ratio (450x350) from original image
- * @param {string} inputPath - Path to the original image
- * @param {string} outputPath - Path to save the cropped image
- * @returns {Promise<string>} - Path to the cropped image
+ * Crop image to specific ratio (450x350) and return as buffer
+ * @param {string|Buffer} input - Path to the image or image buffer
+ * @returns {Promise<Buffer>} - Cropped image as buffer
  */
-async function cropImage(inputPath, outputPath) {
+async function cropImageToBuffer(input) {
   try {
-    const metadata = await sharp(inputPath).metadata();
+    const image = sharp(input);
+    const metadata = await image.metadata();
     const { width, height } = metadata;
     
     // Target ratio: 450x350 = 9:7 ratio
@@ -33,8 +31,8 @@ async function cropImage(inputPath, outputPath) {
       top = Math.round((height - cropHeight) / 2);
     }
     
-    // Crop and resize to 450x350
-    await sharp(inputPath)
+    // Crop and resize to 450x350, return as buffer
+    const buffer = await image
       .extract({ 
         left: Math.max(0, left), 
         top: Math.max(0, top), 
@@ -45,8 +43,27 @@ async function cropImage(inputPath, outputPath) {
         fit: 'cover',
         position: 'center'
       })
-      .toFile(outputPath);
+      .jpeg({ quality: 90 })
+      .toBuffer();
     
+    return buffer;
+  } catch (error) {
+    console.error('Error cropping image:', error);
+    throw error;
+  }
+}
+
+/**
+ * Crop image to specific ratio (450x350) and save to file
+ * @param {string} inputPath - Path to the original image
+ * @param {string} outputPath - Path to save the cropped image
+ * @returns {Promise<string>} - Path to the cropped image
+ */
+async function cropImage(inputPath, outputPath) {
+  try {
+    const buffer = await cropImageToBuffer(inputPath);
+    const sharpInstance = sharp(buffer);
+    await sharpInstance.toFile(outputPath);
     return outputPath;
   } catch (error) {
     console.error('Error cropping image:', error);
@@ -54,4 +71,4 @@ async function cropImage(inputPath, outputPath) {
   }
 }
 
-module.exports = { cropImage };
+module.exports = { cropImage, cropImageToBuffer };
