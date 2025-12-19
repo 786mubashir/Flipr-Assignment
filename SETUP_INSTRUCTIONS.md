@@ -9,7 +9,7 @@ Your MongoDB connection string has been provided. Follow these steps to set it u
 
 ```env
 PORT=5000
-MONGODB_URI=mongodb+srv://Flipr-db:ZgRkyE9EVcTUdEp3@fliprassignment.bnfesl7.mongodb.net/portfolio?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/portfolio?retryWrites=true&w=majority
 CORS_ORIGIN=http://localhost:5173
 ```
 
@@ -22,17 +22,17 @@ CORS_ORIGIN=http://localhost:5173
 
 ### Windows PowerShell:
 ```powershell
-cd "C:\Projects\Flipr Assignment\backend"
+cd "backend"
 @"
 PORT=5000
-MONGODB_URI=mongodb+srv://Flipr-db:ZgRkyE9EVcTUdEp3@fliprassignment.bnfesl7.mongodb.net/portfolio?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/portfolio?retryWrites=true&w=majority
 CORS_ORIGIN=http://localhost:5173
 "@ | Out-File -FilePath .env -Encoding utf8
 ```
 
 ### Windows Command Prompt (CMD):
 ```cmd
-cd "C:\Projects\Flipr Assignment\backend"
+cd "backend"
 echo PORT=5000 > .env
 echo MONGODB_URI=mongodb+srv://Flipr-db:ZgRkyE9EVcTUdEp3@fliprassignment.bnfesl7.mongodb.net/portfolio?retryWrites=true^&w=majority >> .env
 echo CORS_ORIGIN=http://localhost:5173 >> .env
@@ -47,7 +47,7 @@ echo CORS_ORIGIN=http://localhost:5173 >> .env
    - Click "Add IP Address"
    - Either add your current IP or use `0.0.0.0/0` for development (less secure, but easier)
 
-2. **Database User**: The user `Flipr-db` should have read/write permissions to the database
+2. **Database User**: Your MongoDB user should have read/write permissions to the database
 
 3. **Test Connection**: After setting up, you can test if the connection works by running:
    ```bash

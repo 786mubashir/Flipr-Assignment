@@ -102,7 +102,7 @@ This guide provides step-by-step instructions for deploying the Portfolio Applic
 5. Clone your repository
    ```bash
    git clone your-repo-url
-   cd "Flipr Assignment/backend"
+   cd "portfolio-app/backend"
    ```
 6. Install dependencies
    ```bash

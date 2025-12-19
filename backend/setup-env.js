@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const envContent = `PORT=5000
-MONGODB_URI=mongodb+srv://Flipr-db:ZgRkyE9EVcTUdEp3@fliprassignment.bnfesl7.mongodb.net/portfolio?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/portfolio?retryWrites=true&w=majority
 CORS_ORIGIN=http://localhost:5173
 `;
 
